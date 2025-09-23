@@ -11,12 +11,22 @@
   },
   {
     "question": "Which of these helps reduce ocean pollution?",
-    "answers": ["Recycling", "Littering", "Burning waste", "Using more plastic"],
+    "answers": [
+      "Recycling",
+      "Littering",
+      "Burning waste",
+      "Using more plastic"
+    ],
     "correct": "Recycling"
   },
   {
     "question": "What is a microplastic?",
-    "answers": ["Large piece of trash", "Tiny plastic particles", "Ocean plant", "Plastic bag"],
+    "answers": [
+      "Large piece of trash",
+      "Tiny plastic particles",
+      "Ocean plant",
+      "Plastic bag"
+    ],
     "correct": "Tiny plastic particles"
   },
   {
@@ -31,12 +41,22 @@
   },
   {
     "question": "How can you help reduce plastic use?",
-    "answers": ["Use reusable bags", "Buy bottled water", "Use plastic straws", "Burn plastic"],
+    "answers": [
+      "Use reusable bags",
+      "Buy bottled water",
+      "Use plastic straws",
+      "Burn plastic"
+    ],
     "correct": "Use reusable bags"
   },
   {
     "question": "What is the Great Pacific Garbage Patch?",
-    "answers": ["A volcano", "A recycling center", "A floating trash island", "A coral reef"],
+    "answers": [
+      "A volcano",
+      "A recycling center",
+      "A floating trash island",
+      "A coral reef"
+    ],
     "correct": "A floating trash island"
   },
   {
@@ -71,7 +91,12 @@
   },
   {
     "question": "Why are coral reefs important?",
-    "answers": ["For surfing", "They are homes for marine life", "For plastic dumping", "To walk on"],
+    "answers": [
+      "For surfing",
+      "They are homes for marine life",
+      "For plastic dumping",
+      "To walk on"
+    ],
     "correct": "They are homes for marine life"
   },
   {
@@ -86,17 +111,32 @@
   },
   {
     "question": "How can oil spills harm ocean life?",
-    "answers": ["They feed fish", "They cool water", "They poison marine life", "They create waves"],
+    "answers": [
+      "They feed fish",
+      "They cool water",
+      "They poison marine life",
+      "They create waves"
+    ],
     "correct": "They poison marine life"
   },
   {
     "question": "Which of these is NOT recyclable?",
-    "answers": ["Plastic bottle", "Glass jar", "Pizza box (greasy)", "Metal can"],
+    "answers": [
+      "Plastic bottle",
+      "Glass jar",
+      "Pizza box (greasy)",
+      "Metal can"
+    ],
     "correct": "Pizza box (greasy)"
   },
   {
     "question": "What is the primary cause of rising sea levels?",
-    "answers": ["Earthquakes", "Volcanoes", "Melting ice caps", "Plastic pollution"],
+    "answers": [
+      "Earthquakes",
+      "Volcanoes",
+      "Melting ice caps",
+      "Plastic pollution"
+    ],
     "correct": "Melting ice caps"
   },
   {
@@ -116,12 +156,22 @@
   },
   {
     "question": "How can we protect sea turtles?",
-    "answers": ["Leave lights on near beaches", "Clean beaches", "Feed them plastic", "Ride them"],
+    "answers": [
+      "Leave lights on near beaches",
+      "Clean beaches",
+      "Feed them plastic",
+      "Ride them"
+    ],
     "correct": "Clean beaches"
   },
   {
     "question": "What is overfishing?",
-    "answers": ["Fishing with friends", "Fishing too many fish", "Catching only big fish", "Using a fishing net"],
+    "answers": [
+      "Fishing with friends",
+      "Fishing too many fish",
+      "Catching only big fish",
+      "Using a fishing net"
+    ],
     "correct": "Fishing too many fish"
   },
   {
@@ -131,7 +181,12 @@
   },
   {
     "question": "Why should we avoid single-use plastics?",
-    "answers": ["They’re colorful", "They are expensive", "They pollute and can’t decompose", "They taste bad"],
+    "answers": [
+      "They’re colorful",
+      "They are expensive",
+      "They pollute and can’t decompose",
+      "They taste bad"
+    ],
     "correct": "They pollute and can’t decompose"
   },
   {
@@ -141,12 +196,22 @@
   },
   {
     "question": "What can you do to help marine animals?",
-    "answers": ["Use plastic straws", "Leave trash on the beach", "Recycle and reduce waste", "Feed them snacks"],
+    "answers": [
+      "Use plastic straws",
+      "Leave trash on the beach",
+      "Recycle and reduce waste",
+      "Feed them snacks"
+    ],
     "correct": "Recycle and reduce waste"
   },
   {
     "question": "What is ghost fishing?",
-    "answers": ["Fishing at night", "Fishing with spirits", "Lost nets that trap marine life", "Invisible bait"],
+    "answers": [
+      "Fishing at night",
+      "Fishing with spirits",
+      "Lost nets that trap marine life",
+      "Invisible bait"
+    ],
     "correct": "Lost nets that trap marine life"
   },
   {

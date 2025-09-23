@@ -31,7 +31,7 @@ window.onload = async function () {
     y: canvas.height / 2,
     width: 150,
     height: 105,
-    speed: 5
+    speed: 5,
   };
 
   let keys = {};
@@ -46,14 +46,13 @@ window.onload = async function () {
     { src: "assets/Chipspack.png", w: 90, h: 110 },
     { src: "assets/Coke.png", w: 70, h: 100 },
     { src: "assets/Straw1.png", w: 20, h: 80 },
-    { src: "assets/Straw2.png", w: 20, h: 80 }
+    { src: "assets/Straw2.png", w: 20, h: 80 },
   ];
 
-  trashItems.forEach(item => {
+  trashItems.forEach((item) => {
     item.img = new Image();
     item.img.src = item.src;
   });
-
 
   // Touch controls
   let touchY = null;
@@ -74,19 +73,21 @@ window.onload = async function () {
     }
   });
 
-
   // Keyboard controls
   window.addEventListener("keydown", (e) => {
     keys[e.key] = true;
 
     // Hide feedback popup when player moves
-    if (feedbackActive && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+    if (
+      feedbackActive &&
+      ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
+    ) {
       hideFeedbackPopup();
       gamePaused = false;
       requestAnimationFrame(gameLoop);
     }
   });
-  window.addEventListener("keyup", (e) => keys[e.key] = false);
+  window.addEventListener("keyup", (e) => (keys[e.key] = false));
 
   // Quiz Elements
   const quizPopup = document.getElementById("quizPopup");
@@ -94,7 +95,7 @@ window.onload = async function () {
   const quizAnswers = document.getElementById("quizAnswers");
 
   function triggerPowerUp() {
-    plastics = plastics.filter(p => p.color !== "green");
+    plastics = plastics.filter((p) => p.color !== "green");
     score += 3;
 
     const waveDuration = 500;
@@ -124,11 +125,13 @@ window.onload = async function () {
     quizQuestion.textContent = random.question;
     quizAnswers.innerHTML = "";
 
-    random.answers.forEach(answer => {
+    random.answers.forEach((answer) => {
       const btn = document.createElement("button");
       btn.textContent = answer;
       btn.onclick = () => {
-        quizAnswers.querySelectorAll("button").forEach(b => b.disabled = true);
+        quizAnswers
+          .querySelectorAll("button")
+          .forEach((b) => (b.disabled = true));
         quizPopup.classList.add("hidden");
 
         if (answer === random.correct) {
@@ -146,7 +149,10 @@ window.onload = async function () {
             requestAnimationFrame(gameLoop);
           }, 2000);
         } else {
-          showFeedbackPopup(`❌ Wrong! The correct answer is: ${random.correct}`, "rgba(255, 0, 0, 0.8)");
+          showFeedbackPopup(
+            `❌ Wrong! The correct answer is: ${random.correct}`,
+            "rgba(255, 0, 0, 0.8)",
+          );
           fish.glow = true;
           setTimeout(() => {
             hideFeedbackPopup();
@@ -165,27 +171,29 @@ window.onload = async function () {
   function drawBackground() {
     ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
   }
+  function drawBackground() {
+    ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+  }
 
   function drawFish() {
     ctx.save();
-  
+
     if (fish.glow) {
       ctx.shadowColor = "red";
       ctx.shadowBlur = 25;
     } else {
       ctx.shadowBlur = 0;
     }
-  
+
     if (fishImage.complete) {
       ctx.drawImage(fishImage, fish.x, fish.y, fish.width, fish.height);
     } else {
       ctx.fillStyle = "red";
       ctx.fillRect(fish.x, fish.y, fish.width, fish.height);
     }
-  
+
     ctx.restore();
   }
-  
 
   function updateFish() {
     if (keys["ArrowUp"]) fish.y -= fish.speed;
@@ -206,7 +214,7 @@ window.onload = async function () {
         r: 40,
         color: "pink",
         passed: false,
-        isQuizTrigger: true
+        isQuizTrigger: true,
       });
     } else {
       const item = trashItems[Math.floor(Math.random() * trashItems.length)];
@@ -217,11 +225,10 @@ window.onload = async function () {
         h: item.h,
         img: item.img,
         passed: false,
-        isQuizTrigger: false
+        isQuizTrigger: false,
       });
     }
   }
-
 
   function updatePlastics() {
     spawnTimer++;

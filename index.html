@@ -1,48 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trash Tide</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    /* Optional fallback if .hidden is not defined in your CSS */
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trash Tide</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Optional fallback if .hidden is not defined in your CSS */
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
 
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas"></canvas>
-
-  <!-- Quiz Popup -->
-  <div id="quizPopup" class="hidden">
-    <div class="quiz-box">
-      <p id="quizQuestion">Question goes here...</p>
-      <div id="quizAnswers"></div>
+    <!-- Quiz Popup -->
+    <div id="quizPopup" class="hidden">
+      <div class="quiz-box">
+        <p id="quizQuestion">Question goes here...</p>
+        <div id="quizAnswers"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Feedback Popup (for Correct/Wrong answers) -->
-  <div id="feedbackPopup" class="hidden" style="
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 20px 30px;
-    border-radius: 10px;
-    font-size: 20px;
-    z-index: 1000;
-    text-align: center;
-    pointer-events: none;
-  ">
-    <!-- Dynamically updated content -->
-  </div>
+    <!-- Feedback Popup (for Correct/Wrong answers) -->
+    <div
+      id="feedbackPopup"
+      class="hidden"
+      style="
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 10px;
+        font-size: 20px;
+        z-index: 1000;
+        text-align: center;
+        pointer-events: none;
+      "
+    >
+      <!-- Dynamically updated content -->
+    </div>
 
-  <script src="game.js"></script>
-</body>
+    <script src="game.js"></script>
+  </body>
 </html>
