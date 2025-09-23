@@ -4,6 +4,15 @@ async function loadQuizData() {
   quizData = await response.json();
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+    img.src = src;
+  });
+}
+
 window.onload = async function () {
   await loadQuizData();
 
@@ -20,11 +29,32 @@ window.onload = async function () {
   let feedbackPopup = document.getElementById("feedbackPopup");
   let feedbackActive = false;
 
-  const bgImage = new Image();
-  bgImage.src = "assets/ocean-bg.jpg";
+  let bgImage, fishImage;
 
-  const fishImage = new Image();
-  fishImage.src = "assets/fish.png";
+  // --- IMPORTANT CORRECTION HERE ---
+  // The gameLoop should only start AFTER bgImage and fishImage are loaded and assigned.
+  // We use .then() to ensure this.
+  Promise.all([loadImage("assets/ocean-bg.jpg"), loadImage("assets/fish.png")])
+    .then(([bg, fish]) => {
+      bgImage = bg;
+      fishImage = fish;
+
+      // render - Now gameLoop() is called AFTER the main images are loaded
+      gameLoop();
+    })
+    .catch((error) => {
+      console.error("Failed to load images:", error);
+      // You might want to display an error message on the canvas or a specific div
+      ctx.fillStyle = "red";
+      ctx.font = "30px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        "Error loading game assets!",
+        canvas.width / 2,
+        canvas.height / 2,
+      );
+    });
+  // --- END OF CORRECTION ---
 
   let fish = {
     x: 100,
@@ -95,32 +125,54 @@ window.onload = async function () {
   const quizAnswers = document.getElementById("quizAnswers");
 
   function triggerPowerUp() {
-    plastics = plastics.filter((p) => p.color !== "green");
+    // Filter out all "green" colored plastics (which were actually the normal trash, not pink)
+    // Assuming the intent was to remove non-quiz-trigger plastics.
+    plastics = plastics.filter((p) => p.isQuizTrigger); // Keeps only pink quiz triggers
     score += 3;
 
     const waveDuration = 500;
     const waveStartTime = Date.now();
-    const originalDrawBackground = drawBackground;
 
-    drawBackground = function () {
-      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+    function drawPowerUpWave() {
+      drawBackground(); // Draw the original background first
       const elapsed = Date.now() - waveStartTime;
       if (elapsed < waveDuration) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        const progress = elapsed / waveDuration;
+        const alpha = 0.3 * Math.sin(progress * Math.PI); // Fades in and out
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-      } else {
-        drawBackground = originalDrawBackground;
+        requestAnimationFrame(drawPowerUpWave);
       }
-    };
-
-    setTimeout(() => {
-      drawBackground = originalDrawBackground;
-    }, waveDuration);
+    }
+    drawPowerUpWave();
   }
+
+  const drawBackground = () => {
+    // Ensure bgImage is loaded before drawing
+    if (bgImage && bgImage.complete) {
+      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+    } else {
+      // Fallback if image not loaded (should not happen with the Promise.all fix)
+      ctx.fillStyle = "deepskyblue"; // Blank blue screen fallback
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  };
 
   function showQuiz() {
     console.log("Showing quiz...");
     gamePaused = true;
+    // Ensure quizData is loaded before trying to access it
+    if (!quizData || quizData.length === 0) {
+      console.error("Quiz data not loaded or empty.");
+      showFeedbackPopup("Quiz data error!", "red");
+      setTimeout(() => {
+        hideFeedbackPopup();
+        gamePaused = false;
+        requestAnimationFrame(gameLoop);
+      }, 2000);
+      return;
+    }
+
     const random = quizData[Math.floor(Math.random() * quizData.length)];
     quizQuestion.textContent = random.question;
     quizAnswers.innerHTML = "";
@@ -131,8 +183,8 @@ window.onload = async function () {
       btn.onclick = () => {
         quizAnswers
           .querySelectorAll("button")
-          .forEach((b) => (b.disabled = true));
-        quizPopup.classList.add("hidden");
+          .forEach((b) => (b.disabled = true)); // Disable all buttons after one is clicked
+        // quizPopup.classList.add("hidden"); // Only hide after feedback
 
         if (answer === random.correct) {
           showFeedbackPopup("✅ Correct!", "rgba(0, 128, 0, 0.8)");
@@ -140,11 +192,12 @@ window.onload = async function () {
             setTimeout(() => {
               triggerPowerUp();
               powerUpReady = false;
-            }, 2000);
+            }, 1000); // Shorter delay to see the power-up effect
           }
 
           setTimeout(() => {
             hideFeedbackPopup();
+            quizPopup.classList.add("hidden"); // Hide quiz after feedback
             gamePaused = false;
             requestAnimationFrame(gameLoop);
           }, 2000);
@@ -156,6 +209,7 @@ window.onload = async function () {
           fish.glow = true;
           setTimeout(() => {
             hideFeedbackPopup();
+            quizPopup.classList.add("hidden"); // Hide quiz after feedback
             fish.glow = false;
             gamePaused = false;
             requestAnimationFrame(gameLoop);
@@ -168,13 +222,6 @@ window.onload = async function () {
     quizPopup.classList.remove("hidden");
   }
 
-  function drawBackground() {
-    ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-  }
-  function drawBackground() {
-    ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-  }
-
   function drawFish() {
     ctx.save();
 
@@ -185,9 +232,11 @@ window.onload = async function () {
       ctx.shadowBlur = 0;
     }
 
-    if (fishImage.complete) {
+    // Ensure fishImage is loaded before drawing
+    if (fishImage && fishImage.complete) {
       ctx.drawImage(fishImage, fish.x, fish.y, fish.width, fish.height);
     } else {
+      // Fallback if image not loaded (should not happen with the Promise.all fix)
       ctx.fillStyle = "red";
       ctx.fillRect(fish.x, fish.y, fish.width, fish.height);
     }
@@ -206,12 +255,12 @@ window.onload = async function () {
   }
 
   function spawnPlastic() {
-    const isPink = Math.random() < 0.05;
+    const isPink = Math.random() < 0.05; // 5% chance for a pink quiz trigger
     if (isPink) {
       plastics.push({
         x: canvas.width + 40,
         y: Math.random() * (canvas.height - 80),
-        r: 40,
+        r: 40, // Radius for the pink circle
         color: "pink",
         passed: false,
         isQuizTrigger: true,
@@ -219,7 +268,7 @@ window.onload = async function () {
     } else {
       const item = trashItems[Math.floor(Math.random() * trashItems.length)];
       plastics.push({
-        x: canvas.width + item.w,
+        x: canvas.width + item.w, // Start off-screen
         y: Math.random() * (canvas.height - item.h),
         w: item.w,
         h: item.h,
@@ -241,51 +290,97 @@ window.onload = async function () {
       let p = plastics[i];
       p.x -= plasticSpeed;
 
-      if (!p.passed && p.x + (p.r || p.w) < fish.x) {
+      // Check if plastic has passed the fish (for dodging score)
+      // This should only increment score for non-quiz-trigger items
+      if (!p.passed && !p.isQuizTrigger && p.x + (p.w || p.r) < fish.x) {
         p.passed = true;
         dodgedCount++;
         if (dodgedCount % 4 === 0) score++;
       }
 
-      // Collision detection
-      const fishCenterX = fish.x + fish.width / 2;
-      const fishCenterY = fish.y + fish.height / 2;
-      const objCenterX = p.isQuizTrigger ? p.x : p.x + p.w / 2;
-      const objCenterY = p.isQuizTrigger ? p.y : p.y + p.h / 2;
-      const dx = fishCenterX - objCenterX;
-      const dy = fishCenterY - objCenterY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const radius = p.isQuizTrigger ? p.r : Math.max(p.w, p.h) / 3;
+      // Collision detection (simplified for combined objects and circles)
+      // Using a basic AABB-like check for general items and circle-circle/circle-rect for pink
+      const fishLeft = fish.x;
+      const fishRight = fish.x + fish.width;
+      const fishTop = fish.y;
+      const fishBottom = fish.y + fish.height;
 
-      if (dist < radius + Math.max(fish.width, fish.height) / 3) {
-        if (p.isQuizTrigger) {
-          plastics.splice(i, 1);
-          powerUpReady = true;
-          requestAnimationFrame(() => showQuiz());
-          break;
-        } else {
-          score--;
-          plastics.splice(i, 1);
-          continue;
+      let plasticLeft, plasticRight, plasticTop, plasticBottom;
+      let collided = false;
+
+      if (p.isQuizTrigger) {
+        // Collision for pink circle with fish bounding box
+        const circleX = p.x;
+        const circleY = p.y;
+        const circleRadius = p.r;
+
+        // Find the closest point on the fish's bounding box to the center of the circle
+        let testX = circleX;
+        let testY = circleY;
+
+        if (circleX < fishLeft) testX = fishLeft;
+        else if (circleX > fishRight) testX = fishRight;
+        if (circleY < fishTop) testY = fishTop;
+        else if (circleY > fishBottom) testY = fishBottom;
+
+        // Calculate the distance between the closest point and the circle's center
+        const distX = circleX - testX;
+        const distY = circleY - testY;
+        const distance = Math.sqrt(distX * distX + distY * distY);
+
+        if (distance <= circleRadius) {
+          collided = true;
+        }
+      } else {
+        // AABB collision for image-based plastics
+        plasticLeft = p.x;
+        plasticRight = p.x + p.w;
+        plasticTop = p.y;
+        plasticBottom = p.y + p.h;
+
+        if (
+          fishRight > plasticLeft &&
+          fishLeft < plasticRight &&
+          fishBottom > plasticTop &&
+          fishTop < plasticBottom
+        ) {
+          collided = true;
         }
       }
 
+      if (collided) {
+        if (p.isQuizTrigger) {
+          plastics.splice(i, 1);
+          powerUpReady = true;
+          // Use setTimeout with 0ms to defer showQuiz() to the next event loop cycle,
+          // which helps avoid issues if showQuiz() modifies the same array immediately.
+          setTimeout(() => showQuiz(), 0);
+          break; // Stop checking collisions for this frame after a quiz trigger hit
+        } else {
+          score--;
+          plastics.splice(i, 1);
+          continue; // Continue to the next plastic after collision
+        }
+      }
+
+      // Remove plastic if it goes off-screen
       if (p.x + (p.r || p.w) < 0) {
         plastics.splice(i, 1);
         continue;
       }
 
-      // ✅ Draw
+      // ✅ Draw plastics
       if (p.isQuizTrigger) {
         ctx.beginPath();
         ctx.fillStyle = "pink";
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        if (p.img.complete) {
+        if (p.img && p.img.complete) {
+          // Ensure item.img is loaded
           ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
         } else {
-          ctx.fillStyle = "green"; // fallback box
+          ctx.fillStyle = "green"; // fallback box for trash if image not loaded
           ctx.fillRect(p.x, p.y, p.w, p.h);
         }
       }
@@ -320,10 +415,4 @@ window.onload = async function () {
     drawScore();
     requestAnimationFrame(gameLoop);
   }
-
-  bgImage.onload = () => {
-    fishImage.onload = () => {
-      gameLoop();
-    };
-  };
 };
