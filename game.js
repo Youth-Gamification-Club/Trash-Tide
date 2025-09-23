@@ -1,4 +1,12 @@
-window.onload = function () {
+let quizData;
+async function loadQuizData() {
+  const response = await fetch("quizData.json");
+  quizData = await response.json();
+}
+
+window.onload = async function () {
+  await loadQuizData();
+
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
@@ -84,165 +92,6 @@ window.onload = function () {
   const quizPopup = document.getElementById("quizPopup");
   const quizQuestion = document.getElementById("quizQuestion");
   const quizAnswers = document.getElementById("quizAnswers");
-
-  const quizData = [
-    {
-      question: "What is the most common type of trash in the ocean?",
-      answers: ["Plastic", "Glass", "Metal", "Wood"],
-      correct: "Plastic"
-    },
-    {
-      question: "How long does it take a plastic bottle to decompose?",
-      answers: ["50 years", "450 years", "10 years", "1000 years"],
-      correct: "450 years"
-    },
-    {
-      question: "Which of these helps reduce ocean pollution?",
-      answers: ["Recycling", "Littering", "Burning waste", "Using more plastic"],
-      correct: "Recycling"
-    },
-    {
-      question: "What is a microplastic?",
-      answers: ["Large piece of trash", "Tiny plastic particles", "Ocean plant", "Plastic bag"],
-      correct: "Tiny plastic particles"
-    },
-    {
-      question: "Which ocean is the largest?",
-      answers: ["Atlantic", "Indian", "Pacific", "Arctic"],
-      correct: "Pacific"
-    },
-    {
-      question: "Which sea creature is most affected by plastic rings?",
-      answers: ["Turtles", "Sharks", "Dolphins", "Jellyfish"],
-      correct: "Turtles"
-    },
-    {
-      question: "How can you help reduce plastic use?",
-      answers: ["Use reusable bags", "Buy bottled water", "Use plastic straws", "Burn plastic"],
-      correct: "Use reusable bags"
-    },
-    {
-      question: "What is the Great Pacific Garbage Patch?",
-      answers: ["A volcano", "A recycling center", "A floating trash island", "A coral reef"],
-      correct: "A floating trash island"
-    },
-    {
-      question: "What is the best way to dispose of e-waste?",
-      answers: ["Throw in ocean", "Recycle properly", "Burn it", "Bury it"],
-      correct: "Recycle properly"
-    },
-    {
-      question: "What marine animal uses echolocation?",
-      answers: ["Octopus", "Dolphin", "Crab", "Shark"],
-      correct: "Dolphin"
-    },
-    {
-      question: "Which gas do ocean plants produce?",
-      answers: ["Carbon dioxide", "Methane", "Oxygen", "Nitrogen"],
-      correct: "Oxygen"
-    },
-    {
-      question: "Which of these items takes the longest to decompose in the ocean?",
-      answers: ["Paper", "Banana peel", "Aluminum can", "Fishing line"],
-      correct: "Fishing line"
-    },
-    {
-      question: "What does marine life often mistake plastic for?",
-      answers: ["Food", "Rock", "Coral", "Other fish"],
-      correct: "Food"
-    },
-    {
-      question: "Which action helps ocean conservation?",
-      answers: ["Overfishing", "Recycling", "Littering", "Polluting"],
-      correct: "Recycling"
-    },
-    {
-      question: "Why are coral reefs important?",
-      answers: ["For surfing", "They are homes for marine life", "For plastic dumping", "To walk on"],
-      correct: "They are homes for marine life"
-    },
-    {
-      question: "What’s a biodegradable item?",
-      answers: ["Glass", "Plastic", "Banana peel", "Aluminum foil"],
-      correct: "Banana peel"
-    },
-    {
-      question: "Which creature is a natural ocean cleaner?",
-      answers: ["Shark", "Whale", "Crab", "Sea cucumber"],
-      correct: "Sea cucumber"
-    },
-    {
-      question: "How can oil spills harm ocean life?",
-      answers: ["They feed fish", "They cool water", "They poison marine life", "They create waves"],
-      correct: "They poison marine life"
-    },
-    {
-      question: "Which of these is NOT recyclable?",
-      answers: ["Plastic bottle", "Glass jar", "Pizza box (greasy)", "Metal can"],
-      correct: "Pizza box (greasy)"
-    },
-    {
-      question: "What is the primary cause of rising sea levels?",
-      answers: ["Earthquakes", "Volcanoes", "Melting ice caps", "Plastic pollution"],
-      correct: "Melting ice caps"
-    },
-    {
-      question: "What’s the term for protecting the environment?",
-      answers: ["Pollution", "Conservation", "Deforestation", "Erosion"],
-      correct: "Conservation"
-    },
-    {
-      question: "How much of the Earth’s surface is covered by oceans?",
-      answers: ["30%", "50%", "70%", "90%"],
-      correct: "70%"
-    },
-    {
-      question: "Which type of bag is best for the environment?",
-      answers: ["Plastic", "Paper", "Reusable cloth", "Styrofoam"],
-      correct: "Reusable cloth"
-    },
-    {
-      question: "How can we protect sea turtles?",
-      answers: ["Leave lights on near beaches", "Clean beaches", "Feed them plastic", "Ride them"],
-      correct: "Clean beaches"
-    },
-    {
-      question: "What is overfishing?",
-      answers: ["Fishing with friends", "Fishing too many fish", "Catching only big fish", "Using a fishing net"],
-      correct: "Fishing too many fish"
-    },
-    {
-      question: "Which of these can harm coral reefs?",
-      answers: ["Sunscreen", "Swimming", "Fishing nearby", "Sunlight"],
-      correct: "Sunscreen"
-    },
-    {
-      question: "Why should we avoid single-use plastics?",
-      answers: ["They’re colorful", "They are expensive", "They pollute and can’t decompose", "They taste bad"],
-      correct: "They pollute and can’t decompose"
-    },
-    {
-      question: "What is the main source of ocean plastic?",
-      answers: ["Boats", "Factories", "People littering", "Volcanoes"],
-      correct: "People littering"
-    },
-    {
-      question: "What can you do to help marine animals?",
-      answers: ["Use plastic straws", "Leave trash on the beach", "Recycle and reduce waste", "Feed them snacks"],
-      correct: "Recycle and reduce waste"
-    },
-    {
-      question: "What is ghost fishing?",
-      answers: ["Fishing at night", "Fishing with spirits", "Lost nets that trap marine life", "Invisible bait"],
-      correct: "Lost nets that trap marine life"
-    },
-    {
-      question: "Which of these is a clean energy source?",
-      answers: ["Oil", "Coal", "Solar", "Plastic"],
-      correct: "Solar"
-    }
-  ];
-  
 
   function triggerPowerUp() {
     plastics = plastics.filter(p => p.color !== "green");
