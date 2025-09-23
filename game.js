@@ -143,6 +143,7 @@ window.onload = async function () {
           setTimeout(() => {
             hideFeedbackPopup();
             gamePaused = false;
+            requestAnimationFrame(gameLoop);
           }, 2000);
         } else {
           showFeedbackPopup(`❌ Wrong! The correct answer is: ${random.correct}`, "rgba(255, 0, 0, 0.8)");
@@ -151,6 +152,7 @@ window.onload = async function () {
             hideFeedbackPopup();
             fish.glow = false;
             gamePaused = false;
+            requestAnimationFrame(gameLoop);
           }, 5000);
         }
       };
