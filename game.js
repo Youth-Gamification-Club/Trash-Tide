@@ -113,6 +113,7 @@ window.onload = async function () {
   const SPEED_PER_SCORE = 6; // tweakable scaling factor
   // Minimum clamp so negative scores don't freeze gameplay
   const MIN_PLASTIC_SPEED = 60;
+  const MAX_PLASTIC_SPEED = 520; // new: cap obstacle speed (tweakable)
   // We try to keep average horizontal distance between plastics near BASE_SPACING.
   const BASE_SPACING = 90; // px spacing at low score (tweakable)
   const MIN_SPACING = 55; // minimum spacing at high difficulty (tweakable)
@@ -125,10 +126,13 @@ window.onload = async function () {
   let lastTimestamp = performance.now();
 
   function currentPlasticSpeed() {
-    // Speed proportional to score (can go down if score decreases)
-    return Math.max(
-      MIN_PLASTIC_SPEED,
-      BASE_PLASTIC_SPEED + score * SPEED_PER_SCORE,
+    // Speed proportional to score (can go down if score decreases) but capped
+    return Math.min(
+      MAX_PLASTIC_SPEED,
+      Math.max(
+        MIN_PLASTIC_SPEED,
+        BASE_PLASTIC_SPEED + score * SPEED_PER_SCORE,
+      ),
     );
   }
 
@@ -146,10 +150,14 @@ window.onload = async function () {
   const BASE_FISH_SPEED = 300; // px/sec at score 0
   const FISH_SPEED_PER_SCORE = 14; // px/sec added per score point
   const MIN_FISH_SPEED = 180; // clamp when score negative
+  const MAX_FISH_SPEED = 640; // new: cap fish movement speed (tweakable)
   function currentFishSpeed() {
-    return Math.max(
-      MIN_FISH_SPEED,
-      BASE_FISH_SPEED + score * FISH_SPEED_PER_SCORE,
+    return Math.min(
+      MAX_FISH_SPEED,
+      Math.max(
+        MIN_FISH_SPEED,
+        BASE_FISH_SPEED + score * FISH_SPEED_PER_SCORE,
+      ),
     );
   }
 
