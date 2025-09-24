@@ -11,7 +11,7 @@ body {
   overflow: hidden;
   background-color: #0e2f44;
   /* Gamified futuristic font */
-  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-family: "Orbitron", "Segoe UI", Arial, sans-serif;
 }
 
 canvas {
@@ -50,7 +50,7 @@ canvas {
   text-align: center;
   border: 1px solid rgba(0, 0, 0, 0.08);
   /* Use a normal/system font for quiz content (requirement) */
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 .quiz-title {
@@ -185,7 +185,9 @@ canvas {
   color: transparent;
   letter-spacing: 1.5px;
   animation: titlePulse 5.5s linear infinite;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.28), 0 0 18px rgba(255, 0, 122, 0.25);
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.28),
+    0 0 18px rgba(255, 0, 122, 0.25);
 }
 
 #gameOverOverlay p {
@@ -197,7 +199,13 @@ canvas {
 }
 
 #restartBtn {
-  background: linear-gradient(100deg, #ff007a 0%, #ff5f11 30%, #ffbf00 60%, #00d4ff 100%);
+  background: linear-gradient(
+    100deg,
+    #ff007a 0%,
+    #ff5f11 30%,
+    #ffbf00 60%,
+    #00d4ff 100%
+  );
   color: #fff;
   border: 0;
   padding: 14px 30px;
@@ -207,7 +215,9 @@ canvas {
   letter-spacing: 0.75px;
   border-radius: 4px;
   box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.55);
-  transition: transform 0.15s ease, filter 0.25s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.25s ease;
   position: relative;
   overflow: hidden;
   font-family: inherit;
@@ -220,7 +230,11 @@ canvas {
   left: -30%;
   width: 30%;
   height: 100%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0)
+  );
   transform: skewX(-18deg);
   animation: sheen 3.4s ease-in-out infinite;
 }
@@ -236,18 +250,35 @@ canvas {
 
 /* Keyframes */
 @keyframes titlePulse {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes sheen {
-  0% { left: -30%; }
-  55%, 100% { left: 130%; }
+  0% {
+    left: -30%;
+  }
+  55%,
+  100% {
+    left: 130%;
+  }
 }
 
 @keyframes panelGlow {
-  0% { opacity: 0.55; }
-  50% { opacity: 0.85; }
-  100% { opacity: 0.55; }
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0.55;
+  }
 }

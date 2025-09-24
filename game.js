@@ -101,14 +101,56 @@ window.onload = async function () {
     y: canvas.height / 2,
     width: 75,
     height: 52.5,
-    speed: 5,
+    baseSpeed: 300, // base px/sec (old 5px/frame * 60)
   };
 
   let keys = {};
   let plastics = [];
-  let plasticSpeed = 3;
-  let spawnTimer = 0;
-  let spawnInterval = 30;
+  // --- Dynamic speed (time-based) configuration ---
+  // Baseline speed in pixels per second when score = 0
+  const BASE_PLASTIC_SPEED = 160; // tweakable
+  // Additional pixels per second gained (or lost) per score point
+  const SPEED_PER_SCORE = 6; // tweakable scaling factor
+  // Minimum clamp so negative scores don't freeze gameplay
+  const MIN_PLASTIC_SPEED = 60;
+  // Spawning now uses spacing logic to keep on‑screen density roughly consistent.
+  // We try to keep average horizontal distance between plastics near BASE_SPACING.
+  const BASE_SPACING = 90; // px spacing at low score (tweakable)
+  const MIN_SPACING = 55; // minimum spacing at high difficulty (tweakable)
+  const SPACING_PER_SCORE = 0.6; // spacing reduction per score point until MIN_SPACING (tweakable)
+
+  let spawnAccumulator = 0; // seconds accumulated
+  // Delta time tracking
+  let lastTimestamp = performance.now();
+
+  function currentPlasticSpeed() {
+    // Speed proportional to score (can go down if score decreases)
+    return Math.max(
+      MIN_PLASTIC_SPEED,
+      BASE_PLASTIC_SPEED + score * SPEED_PER_SCORE,
+    );
+  }
+
+  function currentSpawnInterval() {
+    // Maintain relative density by converting desired spacing to time interval = spacing / speed
+    const effectiveScore = Math.max(0, score); // don't expand spacing if score negative
+    const desiredSpacing = Math.max(
+      MIN_SPACING,
+      BASE_SPACING - effectiveScore * SPACING_PER_SCORE,
+    );
+    return desiredSpacing / currentPlasticSpeed();
+  }
+
+  // --- Fish dynamic speed (time-based, proportional to score) ---
+  const BASE_FISH_SPEED = 300; // px/sec at score 0
+  const FISH_SPEED_PER_SCORE = 14; // px/sec added per score point
+  const MIN_FISH_SPEED = 180; // clamp when score negative
+  function currentFishSpeed() {
+    return Math.max(
+      MIN_FISH_SPEED,
+      BASE_FISH_SPEED + score * FISH_SPEED_PER_SCORE,
+    );
+  }
 
   const trashItems = [
     { src: "assets/Black_trash_bag.png", w: 120, h: 140, damage: 20 },
@@ -284,12 +326,22 @@ window.onload = async function () {
     ctx.restore();
   }
 
-  function updateFish() {
-    if (keys["ArrowUp"]) fish.y -= fish.speed;
-    if (keys["ArrowDown"]) fish.y += fish.speed;
-    if (keys["ArrowRight"]) fish.x += fish.speed;
-    if (keys["ArrowLeft"]) fish.x -= fish.speed;
-
+  function updateFish(dt) {
+    const moveSpeed = currentFishSpeed();
+    let dx = 0;
+    let dy = 0;
+    if (keys["ArrowUp"]) dy -= 1;
+    if (keys["ArrowDown"]) dy += 1;
+    if (keys["ArrowRight"]) dx += 1;
+    if (keys["ArrowLeft"]) dx -= 1;
+    if (dx !== 0 && dy !== 0) {
+      // normalize diagonal
+      const inv = 1 / Math.sqrt(2);
+      dx *= inv;
+      dy *= inv;
+    }
+    fish.x += dx * moveSpeed * dt;
+    fish.y += dy * moveSpeed * dt;
     fish.y = Math.max(0, Math.min(canvas.height - fish.height, fish.y));
     fish.x = Math.max(50, Math.min(200, fish.x));
   }
@@ -319,16 +371,23 @@ window.onload = async function () {
     }
   }
 
-  function updatePlastics() {
-    spawnTimer++;
-    if (spawnTimer > spawnInterval) {
+  function updatePlastics(dt) {
+    // dt in seconds
+    spawnAccumulator += dt;
+    const interval = currentSpawnInterval();
+    let safety = 0; // prevent runaway spawns if interval becomes extremely small
+    while (spawnAccumulator >= interval && safety < 5) {
       spawnPlastic();
-      spawnTimer = 0;
+      spawnAccumulator -= interval;
+      safety++;
     }
+
+    const plasticSpeed = currentPlasticSpeed();
 
     for (let i = plastics.length - 1; i >= 0; i--) {
       let p = plastics[i];
-      p.x -= plasticSpeed;
+      // Move left based on time-scaled speed
+      p.x -= plasticSpeed * dt;
 
       // Check if plastic has passed the fish (for dodging score)
       // This should only increment score for non-quiz-trigger items
@@ -515,7 +574,8 @@ window.onload = async function () {
     score = 0; // Allowed reset
     health = MAX_HEALTH;
     plastics = [];
-    spawnTimer = 0;
+    spawnAccumulator = 0;
+    lastTimestamp = performance.now();
     powerUpReady = false;
     dodgedCount = 0;
     fish.x = 100;
@@ -549,12 +609,24 @@ window.onload = async function () {
   function gameLoop() {
     if (gamePaused) return;
 
+    const now = performance.now();
+    const dt = (now - lastTimestamp) / 1000; // seconds since last frame
+    lastTimestamp = now;
+
     drawBackground();
-    updateFish();
-    updatePlastics();
+    updateFish(dt);
+    updatePlastics(dt);
     drawFish();
     drawScore();
     drawHealthBar();
+
+    // Optional: debug overlay (uncomment to view real-time speed)
+    // ctx.save();
+    // ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    // ctx.font = '14px monospace';
+    // ctx.fillText(`Speed: ${currentPlasticSpeed().toFixed(1)} px/s`, 20, 90);
+    // ctx.restore();
+
     requestAnimationFrame(gameLoop);
   }
 };
