@@ -31,7 +31,6 @@ window.onload = async function () {
 
   let bgImage, fishImage;
 
-  // --- IMPORTANT CORRECTION HERE ---
   // The gameLoop should only start AFTER bgImage and fishImage are loaded and assigned.
   // We use .then() to ensure this.
   Promise.all([loadImage("assets/ocean-bg.jpg"), loadImage("assets/fish.png")])
@@ -39,12 +38,11 @@ window.onload = async function () {
       bgImage = bg;
       fishImage = fish;
 
-      // render - Now gameLoop() is called AFTER the main images are loaded
+      // Render
       gameLoop();
     })
     .catch((error) => {
       console.error("Failed to load images:", error);
-      // You might want to display an error message on the canvas or a specific div
       ctx.fillStyle = "red";
       ctx.font = "30px Arial";
       ctx.textAlign = "center";
@@ -54,7 +52,6 @@ window.onload = async function () {
         canvas.height / 2,
       );
     });
-  // --- END OF CORRECTION ---
 
   let fish = {
     x: 100,
@@ -70,7 +67,6 @@ window.onload = async function () {
   let spawnTimer = 0;
   let spawnInterval = 30;
 
-  // ✅ Load trash item images
   const trashItems = [
     { src: "assets/Black_trash_bag.png", w: 120, h: 140 },
     { src: "assets/Chipspack.png", w: 90, h: 110 },
@@ -134,7 +130,7 @@ window.onload = async function () {
     const waveStartTime = Date.now();
 
     function drawPowerUpWave() {
-      drawBackground(); // Draw the original background first
+      drawBackground(); // Draw the original background
       const elapsed = Date.now() - waveStartTime;
       if (elapsed < waveDuration) {
         const progress = elapsed / waveDuration;
@@ -184,7 +180,7 @@ window.onload = async function () {
         quizAnswers
           .querySelectorAll("button")
           .forEach((b) => (b.disabled = true)); // Disable all buttons after one is clicked
-        // quizPopup.classList.add("hidden"); // Only hide after feedback
+        quizPopup.classList.add("hidden");
 
         if (answer === random.correct) {
           showFeedbackPopup("✅ Correct!", "rgba(0, 128, 0, 0.8)");
@@ -194,26 +190,25 @@ window.onload = async function () {
               powerUpReady = false;
             }, 1000); // Shorter delay to see the power-up effect
           }
-
+          // Resume game sooner since quiz already hidden
           setTimeout(() => {
             hideFeedbackPopup();
-            quizPopup.classList.add("hidden"); // Hide quiz after feedback
             gamePaused = false;
             requestAnimationFrame(gameLoop);
-          }, 2000);
+          }, 1200);
         } else {
           showFeedbackPopup(
             `❌ Wrong! The correct answer is: ${random.correct}`,
             "rgba(255, 0, 0, 0.8)",
           );
           fish.glow = true;
+          // Shorter feedback duration & quiz already hidden
           setTimeout(() => {
             hideFeedbackPopup();
-            quizPopup.classList.add("hidden"); // Hide quiz after feedback
             fish.glow = false;
             gamePaused = false;
             requestAnimationFrame(gameLoop);
-          }, 5000);
+          }, 2500);
         }
       };
       quizAnswers.appendChild(btn);
