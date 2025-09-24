@@ -447,7 +447,8 @@ window.onload = async function () {
 
     ctx.save();
     ctx.fillStyle = "white";
-    ctx.font = "24px Arial";
+    // Use Orbitron for canvas HUD
+    ctx.font = "24px 'Orbitron', 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("Score: " + score, 20, 40);
 
@@ -482,7 +483,7 @@ window.onload = async function () {
 
     // Text
     ctx.fillStyle = "#ffffff";
-    ctx.font = "16px Arial";
+    ctx.font = "16px 'Orbitron', 'Segoe UI', Arial, sans-serif";
     ctx.fillText(`${Math.ceil(health)}/${MAX_HEALTH} HP`, barX + 8, barY + 16);
   }
 
