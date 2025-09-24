@@ -113,11 +113,12 @@ window.onload = async function () {
   const SPEED_PER_SCORE = 6; // tweakable scaling factor
   // Minimum clamp so negative scores don't freeze gameplay
   const MIN_PLASTIC_SPEED = 60;
-  // Spawning now uses spacing logic to keep on‑screen density roughly consistent.
   // We try to keep average horizontal distance between plastics near BASE_SPACING.
   const BASE_SPACING = 90; // px spacing at low score (tweakable)
   const MIN_SPACING = 55; // minimum spacing at high difficulty (tweakable)
   const SPACING_PER_SCORE = 0.6; // spacing reduction per score point until MIN_SPACING (tweakable)
+  // Hard cap on how many plastics can exist at once to avoid overwhelming clutter
+  const MAX_PLASTICS = 24; // tweakable: raise for harder late game
 
   let spawnAccumulator = 0; // seconds accumulated
   // Delta time tracking
@@ -377,6 +378,11 @@ window.onload = async function () {
     const interval = currentSpawnInterval();
     let safety = 0; // prevent runaway spawns if interval becomes extremely small
     while (spawnAccumulator >= interval && safety < 5) {
+      if (plastics.length >= MAX_PLASTICS) {
+        // Don't accumulate an enormous backlog that would burst-spawn later
+        spawnAccumulator = Math.min(spawnAccumulator, interval);
+        break;
+      }
       spawnPlastic();
       spawnAccumulator -= interval;
       safety++;
