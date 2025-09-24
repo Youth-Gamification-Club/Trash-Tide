@@ -23,16 +23,59 @@ window.onload = async function () {
   canvas.height = window.innerHeight;
 
   let score = 0;
+  // Load persisted high score (if any) for display during gameplay
+  let highScore = 0;
+  try {
+    highScore = Number(localStorage.getItem("trashTideHighScore") || 0);
+    if (isNaN(highScore)) highScore = 0;
+  } catch (e) {
+    highScore = 0;
+  }
+
   let gamePaused = false;
   let powerUpReady = false;
   let dodgedCount = 0;
   let feedbackPopup = document.getElementById("feedbackPopup");
   let feedbackActive = false;
 
+  // Health system
+  const MAX_HEALTH = 100;
+  const QUIZ_HEALTH_REWARD = 15; // Health gained for a correct quiz answer
+  let health = MAX_HEALTH;
+  let gameOver = false;
+
+  // Game Over elements (added dynamically if not present)
+  let gameOverOverlay = document.getElementById("gameOverOverlay");
+  let finalScoreEl = document.getElementById("finalScore");
+  if (!gameOverOverlay) {
+    // Safety fallback if HTML not updated
+    gameOverOverlay = document.createElement("div");
+    gameOverOverlay.id = "gameOverOverlay";
+    gameOverOverlay.style.position = "fixed";
+    gameOverOverlay.style.top = 0;
+    gameOverOverlay.style.left = 0;
+    gameOverOverlay.style.width = "100vw";
+    gameOverOverlay.style.height = "100vh";
+    gameOverOverlay.style.display = "flex";
+    gameOverOverlay.style.alignItems = "center";
+    gameOverOverlay.style.justifyContent = "center";
+    gameOverOverlay.style.background = "rgba(0,0,0,0.75)";
+    gameOverOverlay.style.color = "white";
+    gameOverOverlay.style.fontFamily = "sans-serif";
+    gameOverOverlay.style.zIndex = 2000;
+    gameOverOverlay.classList.add("hidden");
+    const inner = document.createElement("div");
+    inner.style.textAlign = "center";
+    inner.innerHTML =
+      '<h1 style="margin-bottom:12px;font-size:48px;">Game Over</h1><p id="finalScore"></p>';
+    gameOverOverlay.appendChild(inner);
+    document.body.appendChild(gameOverOverlay);
+    finalScoreEl = document.getElementById("finalScore");
+  }
+
   let bgImage, fishImage;
 
   // The gameLoop should only start AFTER bgImage and fishImage are loaded and assigned.
-  // We use .then() to ensure this.
   Promise.all([loadImage("assets/ocean-bg.jpg"), loadImage("assets/fish.png")])
     .then(([bg, fish]) => {
       bgImage = bg;
@@ -68,11 +111,11 @@ window.onload = async function () {
   let spawnInterval = 30;
 
   const trashItems = [
-    { src: "assets/Black_trash_bag.png", w: 120, h: 140 },
-    { src: "assets/Chipspack.png", w: 90, h: 110 },
-    { src: "assets/Coke.png", w: 70, h: 100 },
-    { src: "assets/Straw1.png", w: 20, h: 80 },
-    { src: "assets/Straw2.png", w: 20, h: 80 },
+    { src: "assets/Black_trash_bag.png", w: 120, h: 140, damage: 20 },
+    { src: "assets/Chipspack.png", w: 90, h: 110, damage: 12 },
+    { src: "assets/Coke.png", w: 70, h: 100, damage: 15 },
+    { src: "assets/Straw1.png", w: 20, h: 80, damage: 6 },
+    { src: "assets/Straw2.png", w: 20, h: 80, damage: 6 },
   ];
 
   trashItems.forEach((item) => {
@@ -184,6 +227,8 @@ window.onload = async function () {
 
         if (answer === random.correct) {
           showFeedbackPopup("✅ Correct!", "rgba(0, 128, 0, 0.8)");
+          // Reward health ONLY (do not change score logic per requirement)
+          health = Math.min(MAX_HEALTH, health + QUIZ_HEALTH_REWARD);
           if (powerUpReady) {
             setTimeout(() => {
               triggerPowerUp();
@@ -347,14 +392,21 @@ window.onload = async function () {
         if (p.isQuizTrigger) {
           plastics.splice(i, 1);
           powerUpReady = true;
-          // Use setTimeout with 0ms to defer showQuiz() to the next event loop cycle,
-          // which helps avoid issues if showQuiz() modifies the same array immediately.
           setTimeout(() => showQuiz(), 0);
-          break; // Stop checking collisions for this frame after a quiz trigger hit
+          break;
         } else {
-          score--;
+          // Apply health damage (do NOT modify existing score logic other than adjacent line)
+          if (!gameOver) {
+            const damage = p.damage || 10;
+            health -= damage;
+            if (health <= 0) {
+              health = 0;
+              triggerGameOver();
+            }
+          }
+          score--; // existing score logic preserved
           plastics.splice(i, 1);
-          continue; // Continue to the next plastic after collision
+          continue;
         }
       }
 
@@ -383,9 +435,102 @@ window.onload = async function () {
   }
 
   function drawScore() {
+    // Update high score (without changing how score itself is computed)
+    if (score > highScore) {
+      highScore = score;
+      try {
+        localStorage.setItem("trashTideHighScore", String(highScore));
+      } catch (e) {
+        // ignore storage failures
+      }
+    }
+
+    ctx.save();
     ctx.fillStyle = "white";
     ctx.font = "24px Arial";
+    ctx.textAlign = "left";
     ctx.fillText("Score: " + score, 20, 40);
+
+    // High Score on top-right
+    ctx.textAlign = "right";
+    ctx.fillText("High Score: " + highScore, canvas.width - 20, 40);
+    ctx.restore();
+  }
+
+  function drawHealthBar() {
+    const barX = 20;
+    const barY = 60;
+    const barW = 220;
+    const barH = 22;
+    const pct = health / MAX_HEALTH;
+
+    // Background
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillRect(barX, barY, barW, barH);
+
+    // Health fill (gradient)
+    const grad = ctx.createLinearGradient(barX, barY, barX + barW, barY);
+    grad.addColorStop(0, "#39d353");
+    grad.addColorStop(1, pct < 0.3 ? "#ff4242" : "#2ea043");
+    ctx.fillStyle = grad;
+    ctx.fillRect(barX, barY, barW * pct, barH);
+
+    // Border
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barX, barY, barW, barH);
+
+    // Text
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "16px Arial";
+    ctx.fillText(`${Math.ceil(health)}/${MAX_HEALTH} HP`, barX + 8, barY + 16);
+  }
+
+  function triggerGameOver() {
+    if (gameOver) return;
+    gameOver = true;
+    gamePaused = true;
+    // Record high score locally
+    try {
+      const prev = Number(localStorage.getItem("trashTideHighScore") || 0);
+      if (score > prev)
+        localStorage.setItem("trashTideHighScore", String(score));
+      const high = Number(localStorage.getItem("trashTideHighScore") || score);
+      if (finalScoreEl) {
+        finalScoreEl.textContent = `Final Score: ${score} | High Score: ${high}`;
+      } else {
+        console.log("Final Score:", score);
+      }
+      gameOverOverlay.classList.remove("hidden");
+    } catch (e) {
+      console.warn("High score storage failed", e);
+      if (finalScoreEl) finalScoreEl.textContent = `Final Score: ${score}`;
+      gameOverOverlay.classList.remove("hidden");
+    }
+  }
+
+  function restartGame() {
+    // Reset core state (score logic unchanged except resetting value)
+    score = 0; // Allowed reset
+    health = MAX_HEALTH;
+    plastics = [];
+    spawnTimer = 0;
+    powerUpReady = false;
+    dodgedCount = 0;
+    fish.x = 100;
+    fish.y = canvas.height / 2;
+    fish.glow = false;
+    gameOver = false;
+    gamePaused = false;
+    hideFeedbackPopup();
+    if (gameOverOverlay) gameOverOverlay.classList.add("hidden");
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Attach restart button handler if present
+  const restartBtn = document.getElementById("restartBtn");
+  if (restartBtn) {
+    restartBtn.addEventListener("click", () => restartGame());
   }
 
   function showFeedbackPopup(message, color = "rgba(255, 0, 0, 0.8)") {
@@ -408,6 +553,7 @@ window.onload = async function () {
     updatePlastics();
     drawFish();
     drawScore();
+    drawHealthBar();
     requestAnimationFrame(gameLoop);
   }
 };
