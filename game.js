@@ -508,16 +508,6 @@ window.onload = async function () {
   }
 
   function drawScore() {
-    // Update high score (without changing how score itself is computed)
-    if (score > highScore) {
-      highScore = score;
-      try {
-        localStorage.setItem("trashTideHighScore", String(highScore));
-      } catch (e) {
-        // ignore storage failures
-      }
-    }
-
     ctx.save();
     ctx.fillStyle = "white";
     // Use Orbitron for canvas HUD
@@ -575,6 +565,8 @@ window.onload = async function () {
       } else {
         console.log("Final Score:", score);
       }
+      // Reflect updated high score for any subsequent restarts (Option 2 behavior)
+      highScore = high;
       gameOverOverlay.classList.remove("hidden");
     } catch (e) {
       console.warn("High score storage failed", e);
