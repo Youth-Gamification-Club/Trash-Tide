@@ -56,8 +56,8 @@ window.onload = async function () {
   let fish = {
     x: 100,
     y: canvas.height / 2,
-    width: 150,
-    height: 105,
+    width: 75,
+    height: 52.5,
     speed: 5,
   };
 
