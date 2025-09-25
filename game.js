@@ -120,6 +120,13 @@ window.onload = async function () {
   const SPACING_PER_SCORE = 0.6; // spacing reduction per score point until MIN_SPACING (tweakable)
   // Hard cap on how many plastics can exist at once to avoid overwhelming clutter
   const MAX_PLASTICS = 24; // tweakable: raise for harder late game
+  const MAX_SPAWNS_PER_FRAME = 3; // prevent walls of trash after a lag spike
+  const MAX_FRAME_DT = 0.08; // seconds; clamp dt to avoid large burst logic after tab inactive
+  // Organic spawn tuning
+  const SPAWN_INTERVAL_JITTER = 0.25; // +/-25% variation applied per computed interval when multiple due
+  const SPAWN_X_JITTER_FACTOR = 0.35; // fraction of theoretical spacing added/subtracted for horizontal jitter
+  const MIN_VERTICAL_GAP = 50; // minimum vertical gap between newly spawned and nearby recent plastics
+  const MAX_VERTICAL_ATTEMPTS = 8; // attempts to find a non-conflicting Y
 
   let spawnAccumulator = 0; // seconds accumulated
   // Delta time tracking
@@ -129,10 +136,7 @@ window.onload = async function () {
     // Speed proportional to score (can go down if score decreases) but capped
     return Math.min(
       MAX_PLASTIC_SPEED,
-      Math.max(
-        MIN_PLASTIC_SPEED,
-        BASE_PLASTIC_SPEED + score * SPEED_PER_SCORE,
-      ),
+      Math.max(MIN_PLASTIC_SPEED, BASE_PLASTIC_SPEED + score * SPEED_PER_SCORE),
     );
   }
 
@@ -154,10 +158,7 @@ window.onload = async function () {
   function currentFishSpeed() {
     return Math.min(
       MAX_FISH_SPEED,
-      Math.max(
-        MIN_FISH_SPEED,
-        BASE_FISH_SPEED + score * FISH_SPEED_PER_SCORE,
-      ),
+      Math.max(MIN_FISH_SPEED, BASE_FISH_SPEED + score * FISH_SPEED_PER_SCORE),
     );
   }
 
@@ -355,25 +356,57 @@ window.onload = async function () {
     fish.x = Math.max(50, Math.min(200, fish.x));
   }
 
-  function spawnPlastic() {
+  function spawnPlastic(xOffset = 0, spacingPx = 0) {
     const isPink = Math.random() < 0.05; // 5% chance for a pink quiz trigger
+
+    // Determine size characteristics up front for vertical placement logic
+    let w, h, imgRef, radius;
+    if (isPink) {
+      radius = 40; // diameter = 80
+      w = h = radius * 2;
+    } else {
+      const item = trashItems[Math.floor(Math.random() * trashItems.length)];
+      w = item.w;
+      h = item.h;
+      imgRef = item.img;
+    }
+
+    // Pick a vertical position with separation from nearby (within 200px horizontally) existing plastics
+    let yCandidate = 0;
+    for (let attempt = 0; attempt < MAX_VERTICAL_ATTEMPTS; attempt++) {
+      yCandidate = Math.random() * (canvas.height - h);
+      const newX = canvas.width + w + xOffset; // approximate spawn x (uses width similar to previous logic)
+      const tooClose = plastics.some((p) => {
+        // Only consider plastics fairly close horizontally (to avoid scanning entire array)
+        if (Math.abs(p.x - newX) > 220) return false;
+        const pH = p.h || (p.r ? p.r * 2 : 0);
+        return (
+          Math.abs(p.y - yCandidate) < MIN_VERTICAL_GAP &&
+          Math.abs(pH - h) < 160
+        ); // simple vertical separation heuristic
+      });
+      if (!tooClose) break; // accept
+    }
+
+    // Horizontal jitter to avoid perfectly aligned columns when multiple spawn same frame
+    const jitter = (Math.random() * 2 - 1) * spacingPx * SPAWN_X_JITTER_FACTOR;
+
     if (isPink) {
       plastics.push({
-        x: canvas.width + 40,
-        y: Math.random() * (canvas.height - 80),
-        r: 40, // Radius for the pink circle
+        x: canvas.width + 40 + xOffset + jitter,
+        y: yCandidate + 40, // store center y for circle (yCandidate was top-like reference)
+        r: 40,
         color: "pink",
         passed: false,
         isQuizTrigger: true,
       });
     } else {
-      const item = trashItems[Math.floor(Math.random() * trashItems.length)];
       plastics.push({
-        x: canvas.width + item.w, // Start off-screen
-        y: Math.random() * (canvas.height - item.h),
-        w: item.w,
-        h: item.h,
-        img: item.img,
+        x: canvas.width + w + xOffset + jitter,
+        y: yCandidate,
+        w,
+        h,
+        img: imgRef,
         passed: false,
         isQuizTrigger: false,
       });
@@ -384,18 +417,25 @@ window.onload = async function () {
     // dt in seconds
     spawnAccumulator += dt;
     const interval = currentSpawnInterval();
-    let safety = 0; // prevent runaway spawns if interval becomes extremely small
-    while (spawnAccumulator >= interval && safety < 5) {
-      if (plastics.length >= MAX_PLASTICS) {
-        // Don't accumulate an enormous backlog that would burst-spawn later
-        spawnAccumulator = Math.min(spawnAccumulator, interval);
-        break;
+    // Determine how many spawns are due; cap to avoid "wall" effect
+    let due = Math.floor(spawnAccumulator / interval);
+    if (due > 0) {
+      spawnAccumulator -= due * interval; // base consumption
+      const plasticSpeed = currentPlasticSpeed();
+      // Adjust count with cap
+      due = Math.min(due, MAX_SPAWNS_PER_FRAME);
+      let cumulativeOffset = 0;
+      for (let i = 0; i < due; i++) {
+        if (plastics.length >= MAX_PLASTICS) break;
+        // Each spawn can have a slightly jittered spacing interval
+        const intervalJitterFactor =
+          1 + (Math.random() * 2 - 1) * SPAWN_INTERVAL_JITTER;
+        const effectiveInterval = interval * intervalJitterFactor;
+        const spacingPx = effectiveInterval * plasticSpeed;
+        spawnPlastic(cumulativeOffset, spacingPx);
+        cumulativeOffset += spacingPx; // next spawn pushed further to the right
       }
-      spawnPlastic();
-      spawnAccumulator -= interval;
-      safety++;
     }
-
     const plasticSpeed = currentPlasticSpeed();
 
     for (let i = plastics.length - 1; i >= 0; i--) {
@@ -576,8 +616,8 @@ window.onload = async function () {
   }
 
   function restartGame() {
-    // Reset core state (score logic unchanged except resetting value)
-    score = 0; // Allowed reset
+    // Reset core state
+    score = 0;
     health = MAX_HEALTH;
     plastics = [];
     spawnAccumulator = 0;
@@ -616,7 +656,8 @@ window.onload = async function () {
     if (gamePaused) return;
 
     const now = performance.now();
-    const dt = (now - lastTimestamp) / 1000; // seconds since last frame
+    let dt = (now - lastTimestamp) / 1000; // seconds since last frame
+    if (dt > MAX_FRAME_DT) dt = MAX_FRAME_DT; // clamp huge frame gaps (tab switch / lag)
     lastTimestamp = now;
 
     drawBackground();
@@ -625,13 +666,6 @@ window.onload = async function () {
     drawFish();
     drawScore();
     drawHealthBar();
-
-    // Optional: debug overlay (uncomment to view real-time speed)
-    // ctx.save();
-    // ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    // ctx.font = '14px monospace';
-    // ctx.fillText(`Speed: ${currentPlasticSpeed().toFixed(1)} px/s`, 20, 90);
-    // ctx.restore();
 
     requestAnimationFrame(gameLoop);
   }
