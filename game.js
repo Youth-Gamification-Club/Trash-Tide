@@ -268,7 +268,21 @@ window.onload = async function () {
     quizQuestion.textContent = random.question;
     quizAnswers.innerHTML = "";
 
-    random.answers.forEach((answer) => {
+    // Fisher-Yates shuffle implementation to randomize answer order
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    // Work on a shallow copy so original quizData isn't mutated
+    const answers = shuffleArray([...random.answers]);
+
+    answers.forEach((answer) => {
       const btn = document.createElement("button");
       btn.textContent = answer;
       btn.onclick = () => {
