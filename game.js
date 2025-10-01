@@ -40,7 +40,7 @@ window.onload = async function () {
 
   // Health system
   const MAX_HEALTH = 100;
-  const QUIZ_HEALTH_REWARD = 15; // Health gained for a correct quiz answer
+  const QUIZ_HEALTH_REWARD = 5; // Health gained for a correct quiz answer
   let health = MAX_HEALTH;
   let gameOver = false;
 
